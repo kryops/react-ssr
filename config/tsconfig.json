@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmit": false,
+    "outDir": ".",
+    "baseUrl": "."
+  },
+  "files": [
+    "webpack.client.ts",
+    "webpack.server.ts",
+    "webpack.analyze.ts"
+  ]
+}
