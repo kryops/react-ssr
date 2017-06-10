@@ -42,12 +42,17 @@ const loadAsync = (name: string, componentLoader: BundleLoader): AsyncComponentW
                 AsyncComponent.loadedPromise = new Promise((resolve) => {
                     componentLoader((component) => {
                         AsyncComponent.component = component.default
-                        if (this.mounted) {
-                            this.forceUpdate()
-                        }
                         console.log('loading complete:', name)
                         resolve()
                     })
+                })
+            }
+
+            if (!AsyncComponent.component) {
+                AsyncComponent.loadedPromise.then(() => {
+                    if (this.mounted) {
+                        this.forceUpdate()
+                    }
                 })
             }
         }
