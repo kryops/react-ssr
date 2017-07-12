@@ -1,10 +1,11 @@
 import loadAsync, { AsyncComponentWrapper } from './load'
+import preloadAsyncComponents from './preload'
+import AsyncRoute from './route'
 
-export { default as preloadAsyncComponents } from './preload'
-export { default as AsyncRoute } from './route'
+export { preloadAsyncComponents, AsyncRoute }
 
-export const Home = loadAsync('home', require('bundle-loader?lazy&name=home!../routes/home'))
-export const Feature = loadAsync('feature', require('bundle-loader?lazy&name=feature!../routes/feature'))
+export const Home = loadAsync('home', () => import(/* webpackChunkName: "home" */ '../routes/home'))
+export const Feature = loadAsync('feature', () => import(/* webpackChunkName: "feature" */ '../routes/feature'))
 
 export const asyncComponents: AsyncComponentWrapper[] = [
     Home,

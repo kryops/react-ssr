@@ -1,22 +1,24 @@
 import * as React from 'react'
-import { Route, RouteProps, RouteComponentProps } from 'react-router-dom'
+import { Route, RouteProps } from 'react-router-dom'
+import {AsyncComponentWrapper} from './load'
 
-export interface Props extends RouteProps {
-    component: React.SFC<RouteComponentProps<any> | undefined> | React.ComponentClass<RouteComponentProps<any> | undefined>
+interface Props extends RouteProps {
+    component: AsyncComponentWrapper
 }
 
 const AsyncRoute: React.SFC<Props> = (props) => {
 
-    const { component, render, ...rest } = props
+    const { component, ...rest } = props
+    const Component = component
 
-    if (!component) {
-        return <noscript />
+    if (!Component) {
+        return null
     }
 
     return (
-        <Route {...rest} render={({ staticContext }: any) => {
-            return React.createElement(component as any, { staticContext })
-        }} />
+        <Route {...rest} render={({ staticContext }: any) => (
+            <Component staticContext={staticContext} />
+        )} />
     )
 }
 

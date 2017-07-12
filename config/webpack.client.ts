@@ -29,6 +29,7 @@ const config: webpack.Configuration = {
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': '"production"'
         }),
+        new webpack.optimize.ModuleConcatenationPlugin(),
         new webpack.optimize.UglifyJsPlugin(),
         new webpack.optimize.CommonsChunkPlugin({
             children: true,

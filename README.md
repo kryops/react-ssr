@@ -12,21 +12,26 @@ Example of a universal React application with [react-router](https://github.com/
 
 ### Code splitting [(source)](./common/async/index.ts)
 
-The code splitting itself is done through webpack's [bundle-loader](https://github.com/webpack-contrib/bundle-loader):
+The code splitting itself can be done in several ways:
 
-```ts
-require('bundle-loader?lazy&name=home!../routes/home')
-```
+* Using the dynamic ES `import()` syntax
+* webpack's `require.ensure()`
+* webpack's [bundle-loader](https://github.com/webpack-contrib/bundle-loader)
 
-This could also be done through the new dynamic `import()` syntax:
 
 ```ts
 () => import(/* webpackChunkName: "home" */ '../routes/home')
 ```
 
+or alternatively
+
+```ts
+require('bundle-loader?lazy&name=home!../routes/home')
+```
+
 For more options around async code splitting see [the webpack docs for async code splitting](https://webpack.js.org/guides/code-splitting-async/).
 
-### AsyncComponent [(source)](./common/async/load.ts)
+### AsyncComponent [(source)](common/async/load.tsx)
 
 The AsyncComponent has the following responsibilities:
 
@@ -35,12 +40,10 @@ The AsyncComponent has the following responsibilities:
 ```ts
 if (!AsyncComponent.triggeredLoading) {
     AsyncComponent.triggeredLoading = true
-    AsyncComponent.loadedPromise = new Promise((resolve) => {
-        loadAsyncChunk((component) => {
-            AsyncComponent.component = component.default
-            resolve()
+    AsyncComponent.loadedPromise = componentLoader()
+        .then((componentModule) => {
+            AsyncComponent.component = componentModule.default
         })
-    })
 }
 ```
             
@@ -48,8 +51,9 @@ if (!AsyncComponent.triggeredLoading) {
 
 ```ts
 render() {
-    if (this.component) {
-        return React.createElement(this.component, this.props)
+    const Component = AsyncComponent.component
+    if (Component) {
+        return <Component {...this.props} />
     } else {
         return null
     }
@@ -83,7 +87,7 @@ if (
 To share the same code between all async chunks, we create `AsyncComponent`s through a `loadAsync()` factory function:
 
 ```ts
-export const Home = loadAsync('home', require('bundle-loader?lazy&name=home!../routes/home'))
+export const Home = loadAsync('home', () => import(/* webpackChunkName: "home" */ '../routes/home'))
 ```
 
 ### AsyncRoute [(source)](./common/async/route.tsx)
@@ -92,16 +96,18 @@ To make react-router's `staticContext` available for the `AsyncComponent`, we cr
 
 ```ts
 const AsyncRoute: React.SFC<Props> = (props) => {
-    const { component, render, ...rest } = props
-    
-    if (!component) {
-        return <noscript />
+
+    const { component, ...rest } = props
+    const Component = component
+
+    if (!Component) {
+        return null
     }
-    
+
     return (
-        <Route {...rest} render={({ staticContext }) => {
-            return React.createElement(component, { staticContext })
-        }} />
+        <Route {...rest} render={({ staticContext }: any) => (
+            <Component staticContext={staticContext} />
+        )} />
     )
 }
 ```

@@ -1,11 +1,7 @@
 import * as React from 'react'
 
-type BundleLoader = (fn: (component: { default: React.SFC<any> }) => void) => void
-
-export type AsyncComponentWrapper = React.ComponentClass<any> & {
-    componentName: string
-    loadedPromise: Promise<any>
-}
+type AsyncComponentModule = { default: React.ComponentType<{}> }
+type DynamicImport = () => Promise<AsyncComponentModule>
 
 interface Props {
     staticContext?: {
@@ -13,11 +9,16 @@ interface Props {
     }
 }
 
-const loadAsync = (name: string, componentLoader: BundleLoader): AsyncComponentWrapper => (
+export type AsyncComponentWrapper = React.ComponentClass<Props> & {
+    componentName: string
+    loadedPromise: Promise<any>
+}
+
+const loadAsync = (name: string, componentLoader: DynamicImport): AsyncComponentWrapper => (
     class AsyncComponent extends React.Component<Props,{}> {
 
         static componentName = name;
-        static component: React.SFC<{}> | undefined
+        static component: React.ComponentType<{}> | undefined
         static triggeredLoading = false
         static loadedPromise: Promise<any>
 
@@ -39,13 +40,11 @@ const loadAsync = (name: string, componentLoader: BundleLoader): AsyncComponentW
 
                 console.log('loading:', name)
 
-                AsyncComponent.loadedPromise = new Promise((resolve) => {
-                    componentLoader((component) => {
-                        AsyncComponent.component = component.default
+                AsyncComponent.loadedPromise = componentLoader()
+                    .then((componentModule) => {
+                        AsyncComponent.component = componentModule.default
                         console.log('loading complete:', name)
-                        resolve()
                     })
-                })
             }
 
             if (!AsyncComponent.component) {
@@ -66,8 +65,9 @@ const loadAsync = (name: string, componentLoader: BundleLoader): AsyncComponentW
         }
 
         render() {
-            if (AsyncComponent.component) {
-                return React.createElement(AsyncComponent.component, this.props)
+            const Component = AsyncComponent.component
+            if (Component) {
+                return <Component {...this.props} />
             } else {
                 return null
             }
