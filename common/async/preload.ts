@@ -5,10 +5,7 @@ const preloadAsyncComponents = (components?: string[]) => {
     return Promise.all(
         asyncComponents
             .filter(Component => components === undefined || components.indexOf(Component.componentName) !== -1)
-            .map(Component => {
-                new Component({})
-                return Component.loadedPromise
-            })
+            .map(Component => Component.preload())
     )
 }
 

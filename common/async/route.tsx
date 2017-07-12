@@ -11,12 +11,8 @@ const AsyncRoute: React.SFC<Props> = (props) => {
     const { component, ...rest } = props
     const Component = component
 
-    if (!Component) {
-        return null
-    }
-
     return (
-        <Route {...rest} render={({ staticContext }: any) => (
+        <Route {...rest} render={({ staticContext }) => (
             <Component staticContext={staticContext} />
         )} />
     )

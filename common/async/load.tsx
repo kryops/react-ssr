@@ -12,6 +12,7 @@ interface Props {
 export type AsyncComponentWrapper = React.ComponentClass<Props> & {
     componentName: string
     loadedPromise: Promise<any>
+    preload: () => Promise<any>
 }
 
 const loadAsync = (name: string, componentLoader: DynamicImport): AsyncComponentWrapper => (
@@ -22,19 +23,12 @@ const loadAsync = (name: string, componentLoader: DynamicImport): AsyncComponent
         static triggeredLoading = false
         static loadedPromise: Promise<any>
 
-        mounted: boolean
+        static preload() {
+            AsyncComponent.load()
+            return AsyncComponent.loadedPromise
+        }
 
-        constructor(props: Props) {
-            super(props)
-
-            if (
-                this.props.staticContext
-                && this.props.staticContext.asyncComponents
-                && this.props.staticContext.asyncComponents.indexOf(name) === -1
-            ) {
-                this.props.staticContext.asyncComponents.push(name)
-            }
-
+        static load() {
             if (!AsyncComponent.triggeredLoading) {
                 AsyncComponent.triggeredLoading = true
 
@@ -46,6 +40,24 @@ const loadAsync = (name: string, componentLoader: DynamicImport): AsyncComponent
                         console.log('loading complete:', name)
                     })
             }
+        }
+
+        mounted: boolean
+
+        constructor(props: Props) {
+            super(props)
+
+            const { staticContext } = props
+
+            if (
+                staticContext
+                && staticContext.asyncComponents
+                && staticContext.asyncComponents.indexOf(name) === -1
+            ) {
+                staticContext.asyncComponents.push(name)
+            }
+
+            AsyncComponent.load()
 
             if (!AsyncComponent.component) {
                 AsyncComponent.loadedPromise.then(() => {

@@ -60,7 +60,7 @@ render() {
 }
 ```
 
-* Refresh after it the chunk was loaded otherwise
+* Refresh after the chunk was loaded otherwise
 
 ```ts
 if (!AsyncComponent.component) {
@@ -76,11 +76,11 @@ if (!AsyncComponent.component) {
 
 ```ts
 if (
-    this.props.staticContext
-    && this.props.staticContext.asyncComponents
-    && this.props.staticContext.asyncComponents.indexOf(name) === -1
+    staticContext
+    && staticContext.asyncComponents
+    && staticContext.asyncComponents.indexOf(name) === -1
 ) {
-    this.props.staticContext.asyncComponents.push(name)
+    staticContext.asyncComponents.push(name)
 }
 ```
 
@@ -100,12 +100,8 @@ const AsyncRoute: React.SFC<Props> = (props) => {
     const { component, ...rest } = props
     const Component = component
 
-    if (!Component) {
-        return null
-    }
-
     return (
-        <Route {...rest} render={({ staticContext }: any) => (
+        <Route {...rest} render={({ staticContext }) => (
             <Component staticContext={staticContext} />
         )} />
     )
@@ -130,11 +126,7 @@ The server has to
 
 ```ts
 Promise.all(
-    asyncComponents
-        .map(Component => {
-            new Component({})
-            return Component.loadedPromise
-        })
+    asyncComponents.map(Component => Component.preload())
 )
 ```
 
